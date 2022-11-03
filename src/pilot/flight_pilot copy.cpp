@@ -29,15 +29,15 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   rgb_pub = it.advertise("/rgb", 1);
   rgb2_pub = it.advertise("/rgb2", 1);
   depth_pub = it.advertise("/depth", 1);
+  // segmentation_pub = it.advertise("/segmentation", 1);
+  // opticalflow_pub = it.advertise("/opticalflow", 1);
 
-  rgb_info_pub = nh_.advertise<sensor_msgs::CameraInfo>("/rgb_info",1);
-
-  //when changing camera placement, please also change the camera link transformation in the launch file to match the depth map with global map
-  Vector<3> B_r_BC(0,-0.05,0.8);
-  Vector<3> B_r_BC2(0,0.05,0.8);
-  Matrix<3, 3> R_BC = Quaternion(0.7071068, 0, 0, -0.7071068).toRotationMatrix();
+  //HM chinh lai 2 cam song song nhau ???
+  Vector<3> B_r_BC(-0.25, 0.5, 2);
+  Vector<3> B_r_BC2(0.25, 0.5, 2);
+  Matrix<3, 3> R_BC = Quaternion(1.0, 0.0, 0.0, 0.0).toRotationMatrix();
   std::cout << R_BC << std::endl;
-  Matrix<3, 3> R_BC2 = Quaternion(0.7071068, 0, 0, -0.7071068).toRotationMatrix();
+  Matrix<3, 3> R_BC2 = Quaternion(1.0, 0.0, 0.0, 0.0).toRotationMatrix();
 
   rgb2_camera_->setFOV(90);
   rgb2_camera_->setWidth(640);
@@ -60,7 +60,6 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
 
   // initialize subscriber call backs
   sub_state_est_ = nh_.subscribe("/mavros/local_position/pose", 1,
-  //sub_state_est_ = nh_.subscribe("/gazebo_groundtruth_posestamped", 1,
                                  &FlightPilot::poseCallback, this);
   // wait until the gazebo and unity are loaded
   ros::Duration(5.0).sleep();
@@ -68,14 +67,11 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   // connect unity
   setUnity(unity_render_);
   connectUnity();
-  ros::spin();
 }
 
 FlightPilot::~FlightPilot() {}
 
 void FlightPilot::poseCallback(const geometry_msgs::PoseStamped &msg) {
-  ros::Time timestamp = ros::Time::now();
-
   quad_state_.x[QS::POSX] = (Scalar)msg.pose.position.x;
   quad_state_.x[QS::POSY] = (Scalar)msg.pose.position.y;
   quad_state_.x[QS::POSZ] = (Scalar)msg.pose.position.z;
@@ -88,42 +84,28 @@ void FlightPilot::poseCallback(const geometry_msgs::PoseStamped &msg) {
     unity_bridge_ptr_->getRender(0);
     unity_bridge_ptr_->handleOutput();
   }
-
   cv::Mat img;
-  rgb_camera_->getRGBImage(img);
-  sensor_msgs::ImagePtr rgb_msg =
-    cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
-  rgb_msg->header.stamp = timestamp;
-  rgb_pub.publish(rgb_msg);
 
-  rgb2_camera_->getRGBImage(img);
-  sensor_msgs::ImagePtr rgb2_msg =
-    cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
-  rgb2_msg->header.stamp = timestamp;
-  rgb2_pub.publish(rgb2_msg);
+    ros::Time timestamp = ros::Time::now();
+    rgb_camera_->getRGBImage(img);
+    sensor_msgs::ImagePtr rgb_msg =
+      cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+    rgb_msg->header.stamp = timestamp;
+    rgb_pub.publish(rgb_msg);
+  
+    rgb2_camera_->getRGBImage(img);
+    sensor_msgs::ImagePtr rgb2_msg =
+      cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg();
+    rgb2_msg->header.stamp = timestamp;
+    rgb2_pub.publish(rgb2_msg);
 
-  rgb_camera_->getDepthMap(img);
-  sensor_msgs::ImagePtr depth_msg =
-    cv_bridge::CvImage(std_msgs::Header(), "32FC1", img).toImageMsg();
-  depth_msg->header.stamp = timestamp;
-  depth_msg->header.frame_id = "/camera_link";
-  depth_pub.publish(depth_msg);
-
-  rgb_info.header.frame_id="rgb",
-  rgb_info.header.stamp = timestamp;
-  rgb_info.height = 360;
-  rgb_info.width = 640;
-  rgb_info.distortion_model = "plumb_bob";
-  rgb_info.D = std::vector<double>(0);
-  boost::array<double,9> K_array = {320.0, 0.0, 180, 0.0, 320.0, 320.0, 0.0, 0.0, 1.0};
-  boost::array<double,9> R_array = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-  boost::array<double,12> P_array = {320.0, 0.0, 180, 0.0, 0.0, 320, 320, 0.0, 0.0, 0.0, 1.0, 0.0};
-  rgb_info.K = K_array;
-  rgb_info.R = R_array;
-  rgb_info.P = P_array;
-  rgb_info_pub.publish(rgb_info);
+    rgb_camera_->getDepthMap(img);
+    sensor_msgs::ImagePtr depth_msg =
+      cv_bridge::CvImage(std_msgs::Header(), "32FC1", img).toImageMsg();
+    depth_msg->header.stamp = timestamp;
+    depth_msg->header.frame_id = "/camera_link";
+    depth_pub.publish(depth_msg);
 }
-
 bool FlightPilot::setUnity(const bool render) {
   unity_render_ = render;
   if (unity_render_ && unity_bridge_ptr_ == nullptr) {

@@ -26,17 +26,32 @@
 
   <param name="use_sim_time" value="true"/>
 
-  <node pkg="tf" type="static_transform_publisher" name="tf_camera" args="0 -0.15 0.8 -1.57079 0 -1.57079 base_link camera_link 100"/> 
+  <!--
+  <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 1.57079 0 0 after_tf_msg pre_tf_msg 100" />
+  -->
+  <node pkg="tf" type="static_transform_publisher" name="tf_camera" args="0 0 0.8 -1.57079 0 -1.57079 base_link camera_link 100"/> 
 
   <!-- RPG stuff !-->
   <group ns="$(arg quad_name)" >
+
+    <!-- RPG RotorS interface. -->
+    <!--
+    <node pkg="rpg_rotors_interface" type="rpg_rotors_interface"
+        name="rpg_rotors_interface" output="screen" >
+      <rosparam file="$(find rpg_rotors_interface)/parameters/rpg_rotors_interface.yaml" />
+      <remap from="odometry" to="ground_truth/odometry" />
+      <remap from="rpg_rotors_interface/arm" to="bridge/arm" />
+    </node>
+    -->
+
     <!-- RPG Flightmare Unity Render. -->
     <node pkg="flightrender" type="RPG_Flightmare.x86_64" name="rpg_flightmare_render" unless="$(arg use_unity_editor)">
     </node>
-
+  
+    <!-- Autopilot -->
     <node pkg="flightros" type="flight_pilot_node" name="flight_pilot_node" output="screen">
       <rosparam file="$(find flightros)/params/default.yaml" />
+      <remap from="flight_pilot/state_estimate" to="ground_truth/odometry" />
     </node>
   </group>
-
 </launch>
