@@ -40,13 +40,13 @@ FlightPilot::FlightPilot(const ros::NodeHandle &nh, const ros::NodeHandle &pnh)
   Matrix<3, 3> R_BC2 = Quaternion(0.7071068, 0, 0, -0.7071068).toRotationMatrix();
 
   rgb2_camera_->setFOV(90);
-  rgb2_camera_->setWidth(640);
-  rgb2_camera_->setHeight(360);
+  rgb2_camera_->setWidth(720);
+  rgb2_camera_->setHeight(480);
   rgb2_camera_->setRelPose(B_r_BC2, R_BC2);
 
   rgb_camera_->setFOV(90);
-  rgb_camera_->setWidth(640);
-  rgb_camera_->setHeight(360);
+  rgb_camera_->setWidth(720);
+  rgb_camera_->setHeight(480);
   rgb_camera_->setRelPose(B_r_BC, R_BC);
   rgb_camera_->setPostProcesscing(
   std::vector<bool>{true, false, false});
@@ -111,13 +111,16 @@ void FlightPilot::poseCallback(const geometry_msgs::PoseStamped &msg) {
 
   rgb_info.header.frame_id="rgb",
   rgb_info.header.stamp = timestamp;
-  rgb_info.height = 360;
-  rgb_info.width = 640;
+  rgb_info.width = 720;
+  rgb_info.height = 480;
   rgb_info.distortion_model = "plumb_bob";
   rgb_info.D = std::vector<double>(0);
-  boost::array<double,9> K_array = {320.0, 0.0, 180, 0.0, 320.0, 320.0, 0.0, 0.0, 1.0};
+  // boost::array<double,9> K_array = {360.0, 0.0, 240, 0.0, 360.0, 360.0, 0.0, 0.0, 1.0};
+  // boost::array<double,9> R_array = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+  // boost::array<double,12> P_array = {360.0, 0.0, 240, 0.0, 0.0, 360, 360, 0.0, 0.0, 0.0, 1.0, 0.0};
+  boost::array<double,9> K_array = {240.0, 0.0, 360, 0.0, 240.0, 240.0, 0.0, 0.0, 1.0};
   boost::array<double,9> R_array = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-  boost::array<double,12> P_array = {320.0, 0.0, 180, 0.0, 0.0, 320, 320, 0.0, 0.0, 0.0, 1.0, 0.0};
+  boost::array<double,12> P_array = {240.0, 0.0, 360, 0.0, 0.0, 240, 240, 0.0, 0.0, 0.0, 1.0, 0.0};
   rgb_info.K = K_array;
   rgb_info.R = R_array;
   rgb_info.P = P_array;
