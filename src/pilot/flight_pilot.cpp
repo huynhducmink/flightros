@@ -115,9 +115,11 @@ void FlightPilot::poseCallback(const geometry_msgs::PoseStamped &msg) {
   rgb_info.height = 480;
   rgb_info.distortion_model = "plumb_bob";
   rgb_info.D = std::vector<double>(0);
-  // boost::array<double,9> K_array = {360.0, 0.0, 240, 0.0, 360.0, 360.0, 0.0, 0.0, 1.0};
-  // boost::array<double,9> R_array = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-  // boost::array<double,12> P_array = {360.0, 0.0, 240, 0.0, 0.0, 360, 360, 0.0, 0.0, 0.0, 1.0, 0.0};
+
+  //boost::array<double,9> K_array = {360.0, 0.0, 240, 0.0, 360.0, 360.0, 0.0, 0.0, 1.0};
+  //boost::array<double,9> R_array = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+  //boost::array<double,12> P_array = {360.0, 0.0, 240, 0.0, 0.0, 360, 360, 0.0, 0.0, 0.0, 1.0, 0.0};
+  
   boost::array<double,9> K_array = {240.0, 0.0, 360, 0.0, 240.0, 240.0, 0.0, 0.0, 1.0};
   boost::array<double,9> R_array = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
   boost::array<double,12> P_array = {240.0, 0.0, 360, 0.0, 0.0, 240, 240, 0.0, 0.0, 0.0, 1.0, 0.0};
